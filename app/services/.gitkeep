@@ -1,0 +1,12 @@
+# Shared Services Directory
+#
+# Place cross-cutting services here that are shared across multiple modules.
+# Examples:
+# - email_service.py        -> Transactional emails, SMTP, SendGrid
+# - storage_service.py      -> AWS S3, Cloudinary, file uploads
+# - payment_service.py      -> Stripe, Razorpay payment processing
+# - notification_service.py -> SMS, Push notifications, Webhooks
+#
+# Note:
+# Logic specific to a single domain should stay within its module:
+# e.g., app/modules/todo/todo_service.py
