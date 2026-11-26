@@ -12,7 +12,7 @@
 
 A modern, highly-extensible **Flask REST API Boilerplate** built using clean layered architecture and domain-driven modular design. Designed for developers building enterprise-grade, high-performance web APIs and microservices.
 
-[Features](#-key-features) • [Project Structure](#-project-structure) • [Quick Start](#-quick-start) • [Adding New Modules](#-how-to-create-a-new-module) • [Shared Services](#-shared-services) • [API Reference](#-api-endpoints)
+[Features](#-key-features) • [Project Structure](#-project-structure) • [Quick Start](#-quick-start) • [Module Generator](#-automated-module-generator) • [Adding Modules](#-how-to-create-a-new-module-manually) • [Decorators & Services](#-custom-decorators--shared-services) • [API Reference](#-api-endpoints)
 
 </div>
 
@@ -20,14 +20,15 @@ A modern, highly-extensible **Flask REST API Boilerplate** built using clean lay
 
 ## 🌟 Key Features
 
-- **Modular Domain Architecture**: Isolated modules (`routes`, `controller`, `service`, `model`, `schemas`) for maintainability and scalability.
+- **Automated CLI Module Generator**: Scaffold brand-new domain modules (`routes`, `controller`, `service`, `model`, `schemas`) in seconds with one CLI command.
+- **Modular Domain Architecture**: Isolated domain modules for maintainability, high cohesion, and loose coupling.
 - **Layered Clean Architecture**: Strict separation of concerns (Routes $\rightarrow$ Controller $\rightarrow$ Service $\rightarrow$ Model).
 - **Automated Validation & Serialization**: Robust schema validation and deserialization powered by **Marshmallow**.
 - **Centralized Error Handling**: Global exception interceptor returning consistent, readable JSON error payloads.
 - **Unified API Response Standard**: Standardized `{ success, message, data }` response wrapper across all endpoints.
 - **SQLAlchemy with BaseModel**: Pre-configured abstract `BaseModel` featuring auto-incrementing `id`, UTC `created_at`, `updated_at`, and `is_deleted` soft-delete flags.
-- **Environment-based Configuration**: 12-Factor App compliant configuration loaded via `.env` (`DevelopmentConfig`, `ProductionConfig`).
-- **Cross-Cutting Shared Services**: Dedicated `services/` layer for reusable components (e.g., Mailer, Cloud Storage, Payment Gateways).
+- **Environment-based Configuration**: 12-Factor App compliant configuration loaded via `.env` with fallback defaults.
+- **Custom Decorators & Services**: Dedicated layers for route guards (`decorator/`) and reusable cross-cutting components (`services/`).
 
 ---
 
@@ -38,24 +39,26 @@ restfullapi/
 ├── app/
 │   ├── config/             # App settings, environment variables & profiles
 │   │   ├── config.py       # DevelopmentConfig, ProductionConfig, Base Config
-│   │   └── init.py
+│   │   └── __init__.py     # Configuration package exports
 │   ├── database/           # Database engine & base models
 │   │   ├── baseModel.py    # Abstract model with id, timestamps & soft-delete
 │   │   ├── db.py           # SQLAlchemy instance & DB initializer
 │   │   └── __init__.py
-│   ├── decorators/         # Custom decorators (auth guards, rate-limiting, permissions)
+│   ├── decorator/          # Custom decorators (auth guards, RBAC, rate-limiting)
+│   │   └── .gitkeep
 │   ├── exceptions/         # Centralized error handling
 │   │   ├── custom_exceptions.py  # AppError, NotFoundError, ValidationError, etc.
 │   │   ├── error_handler.py      # Global Flask error handlers (JSON output)
 │   │   └── __init__.py
 │   ├── modules/            # Domain-driven feature modules
-│   │   └── todo/           # Example: Complete CRUD Todo Module
-│   │       ├── todo_model.py       # SQLAlchemy ORM model
-│   │       ├── todo_schemas.py     # Request/Response Marshmallow schemas
-│   │       ├── todo_service.py     # Core business logic & database queries
-│   │       ├── todo_controller.py  # HTTP request parsing & response delivery
-│   │       ├── todo_routes.py      # Blueprint definition & route mapping
-│   │       └── __init__.py         # Clean public exports
+│   │   ├── todo/           # Example: Complete CRUD Todo Module
+│   │   │   ├── todo_model.py       # SQLAlchemy ORM model
+│   │   │   ├── todo_schemas.py     # Request/Response Marshmallow schemas
+│   │   │   ├── todo_service.py     # Core business logic & database queries
+│   │   │   ├── todo_controller.py  # HTTP request parsing & response delivery
+│   │   │   ├── todo_routes.py      # Blueprint definition & route mapping
+│   │   │   └── __init__.py         # Clean public exports
+│   │   └── health/         # Healthcheck module
 │   ├── services/           # Shared cross-cutting services (Mailer, S3, Payments)
 │   │   └── .gitkeep
 │   ├── utils/              # Reusable utilities
@@ -64,6 +67,7 @@ restfullapi/
 │   │   └── helpers.py      # String, date & formatting utilities
 │   ├── module_register.py  # Single source of truth for blueprint registration
 │   └── __init__.py         # Application factory (Create_app)
+├── module_generator.py     # ⚡ CLI tool to scaffold new modules instantly
 ├── .env.example            # Environment variables template
 ├── requirements.txt        # Production dependencies
 └── run.py                  # Application launcher
@@ -77,7 +81,7 @@ restfullapi/
 - Python `3.10+` installed
 - `git` installed
 
-### 2. Clone and Setup Environment
+### 2. Setup Environment
 
 ```bash
 # Clone the repository
@@ -117,6 +121,8 @@ Update your `.env`:
 SECRET_KEY=super-secret-key-change-this-in-production
 DATABASE_URL=sqlite:///todo.db
 DEBUG=True
+FLASK_ENV=development
+APPLICATION_NAME=FLASK-API
 ```
 
 ### 5. Launch Development Server
@@ -129,12 +135,43 @@ The API will be available at: **`http://127.0.0.1:5000`**
 
 ---
 
-## 🧩 How to Create a New Module
+## ⚡ Automated Module Generator
 
-Adding a new domain (e.g., `auth`, `users`, or `products`) is straightforward and modular.
+Instead of creating files and folders by hand, use the built-in scaffolding tool:
 
-### Step 1: Create the Module Directory
-Create `app/modules/auth/` containing:
+```bash
+python module_generator.py
+```
+
+### Prompt:
+```text
+Enter module name: payment
+```
+
+### Output:
+```text
+Module 'payment' created successfully!
+Location: app\modules\payment
+```
+
+This instantly creates all 6 standard layered files inside `app/modules/payment/`:
+- `__init__.py`
+- `payment_model.py`
+- `payment_schemas.py`
+- `payment_service.py`
+- `payment_controller.py`
+- `payment_route.py`
+
+Once generated, simply write your logic and register the blueprint in `app/module_register.py`!
+
+---
+
+## 🧩 How to Create a New Module Manually
+
+If you prefer adding a new domain (e.g. `auth`) manually:
+
+### Step 1: Create Module Directory
+Create `app/modules/auth/` with:
 - `auth_model.py`
 - `auth_schemas.py`
 - `auth_service.py`
@@ -175,41 +212,50 @@ __all__ = ["auth_bp", "User"]
 ```
 
 ### Step 3: Register in `module_register.py`
-Add your new blueprint in [app/module_register.py](file:///d:/flask/restfullapi/app/module_register.py):
+Register the blueprint in [app/module_register.py](file:///d:/flask/restfullapi/app/module_register.py):
 
 ```python
 from app.modules.todo import todo_bp
+from app.modules.health import health_bp
 from app.modules.auth import auth_bp  # 1. Import blueprint
 
 def Module_register(app):
-    apiurl = "/api/v1"
+    urlprefix = "/api/v1"
 
-    app.register_blueprint(todo_bp, url_prefix=f"{apiurl}/todos")
-    app.register_blueprint(auth_bp, url_prefix=f"{apiurl}/auth")  # 2. Register with prefix
+    app.register_blueprint(todo_bp, url_prefix=f"{urlprefix}/todos")
+    app.register_blueprint(health_bp, url_prefix=f"{urlprefix}/health")
+    app.register_blueprint(auth_bp, url_prefix=f"{urlprefix}/auth")  # 2. Register here
 ```
 
 Your endpoints will now be live under `/api/v1/auth/register` and `/api/v1/auth/login`.
 
 ---
 
-## ⚙️ Shared Services (`app/services/`)
+## 🛡️ Custom Decorators & Shared Services
 
-Use `app/services/` for logic that needs to be consumed across **multiple modules**:
+### 1. Custom Decorators (`app/decorator/`)
+Use `app/decorator/` for request guards, security checks, and cross-cutting endpoint wrappers:
+- **`@jwt_required` / `@login_required`**: Token verification and payload extraction.
+- **`@roles_accepted('admin')`**: Role-based access control (RBAC).
+- **`@rate_limit`**: Endpoint throttling and abuse prevention.
 
-| Service Example | Purpose |
+### 2. Shared Services (`app/services/`)
+Use `app/services/` for reusable business logic consumed across **multiple modules**:
+
+| Service | Responsibility |
 |---|---|
-| `email_service.py` | Send welcome emails, password resets, OTPs via SMTP/SendGrid |
-| `storage_service.py` | Upload & manage media files on AWS S3 or Cloudinary |
-| `payment_service.py` | Handle payments, checkout sessions, and webhook verifications |
-| `notification_service.py` | Dispatch SMS, Slack alerts, or mobile push notifications |
+| `email_service.py` | Transactional emails, SMTP, SendGrid, OTP delivery |
+| `storage_service.py` | AWS S3, Cloudinary file uploads and media handling |
+| `payment_service.py` | Stripe, Razorpay payment processing and webhooks |
+| `notification_service.py` | Mobile push notifications, SMS alerts |
 
-*Note: Business logic tied only to a single domain should remain inside its respective module (`app/modules/<module>/<module>_service.py`).*
+*Note: Logic specific to a single domain stays inside its module (`app/modules/<module>/<module>_service.py`).*
 
 ---
 
 ## 📡 API Endpoints (Reference)
 
-All endpoints follow the base route: `/api/v1/todos`
+All Todo endpoints follow the base route: `/api/v1/todos`
 
 | Method | Endpoint | Description | Status Code |
 |:---:|---|---|:---:|
@@ -263,7 +309,7 @@ Errors return a consistent structure with appropriate HTTP status codes:
 }
 ```
 
-Supported out-of-the-box exceptions:
+Supported exceptions:
 - `AppError` (`400`)
 - `ValidationError` (`400`)
 - `UnauthorizedError` (`401`)

@@ -1,0 +1,23 @@
+# Custom Decorators Directory
+#
+# Place reusable route & function decorators here.
+#
+# Examples:
+# - auth_decorator.py    -> Token verification, @jwt_required, @login_required
+# - roles_decorator.py   -> RBAC guards, @roles_accepted('admin', 'manager')
+# - rate_limit.py        -> API rate-limiting & throttling guards
+# - audit_decorator.py   -> Execution timing, request & response logging
+#
+# Example Usage:
+#   from functools import wraps
+#   from flask import request
+#   from app.exceptions import UnauthorizedError
+#
+#   def require_api_key(f):
+#       @wraps(f)
+#       def decorated(*args, **kwargs):
+#           key = request.headers.get("X-API-KEY")
+#           if not key:
+#               raise UnauthorizedError("API key missing")
+#           return f(*args, **kwargs)
+#       return decorated
